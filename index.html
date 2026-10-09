@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SOLÉANCE — ご注文フォーム</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0D2137;
+    --gold: #C8A96E;
+    --cream: #F8F5EF;
+    --gray: #555;
+    --lgray: #999;
+    --border: #DDD;
+    --red: #CC2222;
+    --green: #1A6A1A;
+  }
+  body {
+    background: var(--navy);
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: var(--navy);
+    padding: 24px 20px 16px;
+    text-align: center;
+    border-bottom: 1.5px solid var(--gold);
+  }
+  header h1 {
+    color: var(--gold);
+    font-size: 24px;
+    letter-spacing: 6px;
+    font-weight: 300;
+  }
+  header p {
+    color: #AAA;
+    font-size: 11px;
+    margin-top: 6px;
+    letter-spacing: 2px;
+  }
+  .event-badge {
+    background: var(--red);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .container {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--navy);
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--lgray);
+    margin-bottom: 5px;
+  }
+  .field label span.req {
+    color: var(--red);
+    margin-left: 3px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 16px;
+    color: var(--gray);
+    background: #FAFAFA;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--gold);
+    background: white;
+  }
+  .field textarea { height: 80px; resize: none; font-size: 14px; }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▼';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--lgray);
+    font-size: 10px;
+    pointer-events: none;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .product-block {
+    background: #F8F5EF;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: 1px solid #E8E0D0;
+    position: relative;
+  }
+  .product-block .remove-btn {
+    position: absolute;
+    top: 10px; right: 12px;
+    background: none;
+    border: none;
+    color: var(--lgray);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .product-num {
+    font-size: 10px;
+    color: var(--gold);
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .add-btn {
+    width: 100%;
+    padding: 12px;
+    background: none;
+    border: 1.5px dashed var(--gold);
+    border-radius: 8px;
+    color: var(--gold);
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .payment-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pay-opt {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray);
+    transition: all .2s;
+    user-select: none;
+  }
+  .pay-opt.selected {
+    border-color: var(--gold);
+    background: #FFF9F0;
+    color: var(--navy);
+    font-weight: bold;
+  }
+  .pay-opt input { display: none; }
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    background: var(--gold);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: opacity .2s;
+  }
+  .submit-btn:active { opacity: 0.8; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .note-box {
+    background: #EEF4FF;
+    border-left: 3px solid #3366CC;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #3366CC;
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+  /* 完了画面 */
+  #success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  #success-screen .check {
+    font-size: 60px;
+    margin-bottom: 20px;
+  }
+  #success-screen h2 {
+    color: var(--gold);
+    font-size: 20px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+  #success-screen p {
+    color: #AAA;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  #loading { display: none; text-align: center; padding: 20px; color: white; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid rgba(200,169,110,0.3);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SOLÉANCE</h1>
+  <p>ORDER FORM</p>
+</header>
+<div class="event-badge">🎉 ポップアップイベント — 本日限定 全品 20% OFF</div>
+
+<div class="container">
+
+  <!-- 完了画面 -->
+  <div id="success-screen">
+    <div class="check">✅</div>
+    <h2>ご注文ありがとうございます</h2>
+    <p>ご注文内容を受け付けました。<br>商品が入荷次第、ご連絡の上発送いたします。<br><br>ご不明な点は会場スタッフまで<br>お気軽にお申し付けください。</p>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p style="color:#AAA;font-size:13px;">送信中...</p>
+  </div>
+
+  <!-- メインフォーム -->
+  <form id="order-form">
+
+    <!-- お客様情報 -->
+    <div class="section">
+      <div class="section-title">CUSTOMER INFO  /  お客様情報</div>
+      <div class="field">
+        <label>お名前<span class="req">*</span></label>
+        <input type="text" name="name" placeholder="山田 花子" required autocomplete="name">
+      </div>
+      <div class="field">
+        <label>電話番号<span class="req">*</span></label>
+        <input type="tel" name="tel" placeholder="090-0000-0000" required autocomplete="tel">
+      </div>
+      <div class="field">
+        <label>メールアドレス</label>
+        <input type="email" name="email" placeholder="example@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>郵便番号<span class="req">*</span></label>
+        <input type="text" name="zip" placeholder="000-0000" maxlength="8" required
+          oninput="fetchAddress(this.value)">
+      </div>
+      <div class="field">
+        <label>都道府県・市区町村<span class="req">*</span></label>
+        <input type="text" name="addr1" id="addr1" placeholder="北海道 札幌市中央区" required autocomplete="address-level1">
+      </div>
+      <div class="field">
+        <label>番地・建物名<span class="req">*</span></label>
+        <input type="text" name="addr2" placeholder="大通西1丁目1-1　SOLEANCEビル101" required autocomplete="street-address">
+      </div>
+    </div>
+
+    <!-- 注文商品 -->
+    <div class="section">
+      <div class="section-title">ORDER ITEMS  /  ご注文商品</div>
+      <div id="products-container">
+        <!-- 商品ブロックはJSで生成 -->
+      </div>
+      <button type="button" class="add-btn" onclick="addProduct()">＋ 商品を追加</button>
+    </div>
+
+    <!-- 支払い -->
+    <div class="section">
+      <div class="section-title">PAYMENT  /  お支払い方法</div>
+      <div class="payment-opts">
+        <label class="pay-opt" onclick="selectPay(this)">
+          <input type="radio" name="payment" value="現金（当日）" required>
+          💴 現金<br><small style="color:var(--lgray)">当日お支払い</small>
+        </label>
+        <label class="pay-opt" onclick="selectPay(this)">
+          <input type="radio" name="payment" value="銀行振込（後払い）">
+          🏦 銀行振込<br><small style="color:var(--lgray)">発送後お支払い</small>
+        </label>
+        <label class="pay-opt" onclick="selectPay(this)">
+          <input type="radio" name="payment" value="PayPay">
+          📱 PayPay<br><small style="color:var(--lgray)">当日QR決済</small>
+        </label>
+        <label class="pay-opt" onclick="selectPay(this)">
+          <input type="radio" name="payment" value="クレジットカード（後日請求）">
+          💳 カード<br><small style="color:var(--lgray)">後日請求</small>
+        </label>
+      </div>
+    </div>
+
+    <!-- 備考 -->
+    <div class="section">
+      <div class="section-title">MEMO  /  備考・ご要望</div>
+      <div class="field">
+        <textarea name="memo" placeholder="ギフト包装希望、発送日指定など自由にご記入ください"></textarea>
+      </div>
+    </div>
+
+    <div class="note-box">
+      📦 商品は仕入れ確定後（通常1〜3週間）にご連絡の上、順次発送いたします。<br>
+      🔒 ご入力いただいた個人情報は発送・ご連絡のみに使用します。
+    </div>
+
+    <button type="submit" class="submit-btn" id="submit-btn">注文を送信する</button>
+  </form>
+
+</div><!-- /container -->
+
+<script>
+// ===== GAS WebアプリのURL（デプロイ後に差し替え） =====
+const GAS_URL = 'YOUR_GAS_WEBAPP_URL_HERE';
+
+// 商品選択肢
+const PRODUCTS = [
+  '-- 商品を選択 --',
+  '[PIERCE] Moissanite 3mm (0.1ct)',
+  '[PIERCE] Moissanite 4mm (0.25ct)',
+  '[PIERCE] Moissanite 5mm (0.5ct)',
+  '[PIERCE] Moissanite 6.5mm (1ct)',
+  '[PIERCE] Moissanite 8mm (2ct)',
+  '[NECKLACE ENTRY] Zircon×316L 3mm 18inch',
+  '[NECKLACE ENTRY] Zircon×316L 3mm 20inch',
+  '[NECKLACE ENTRY] Zircon×316L 3mm 22inch',
+  '[NECKLACE ENTRY] Zircon×316L 4mm 18inch',
+  '[NECKLACE ENTRY] Zircon×316L 4mm 20inch',
+  '[NECKLACE ENTRY] Zircon×316L 4mm 22inch',
+  '[NECKLACE ENTRY] Zircon×316L 5mm 18inch',
+  '[NECKLACE ENTRY] Zircon×316L 5mm 20inch',
+  '[NECKLACE ENTRY] Zircon×316L 5mm 22inch',
+  '[BRACELET ENTRY] Zircon×316L 3mm 6〜8.5inch',
+  '[BRACELET ENTRY] Zircon×316L 4mm 6〜8.5inch',
+  '[BRACELET ENTRY] Zircon×316L 5mm 6〜8.5inch',
+  '[NECKLACE PREMIUM] Moiss×S925 2mm 18inch',
+  '[NECKLACE PREMIUM] Moiss×S925 2mm 20inch',
+  '[NECKLACE PREMIUM] Moiss×S925 2mm 22inch',
+  '[NECKLACE PREMIUM] Moiss×S925 3mm 18inch',
+  '[NECKLACE PREMIUM] Moiss×S925 3mm 20inch',
+  '[NECKLACE PREMIUM] Moiss×S925 3mm 22inch',
+  '[NECKLACE PREMIUM] Moiss×S925 4mm 18inch',
+  '[NECKLACE PREMIUM] Moiss×S925 4mm 20inch',
+  '[NECKLACE PREMIUM] Moiss×S925 4mm 22inch',
+  '[NECKLACE PREMIUM] Moiss×S925 5mm 18inch',
+  '[NECKLACE PREMIUM] Moiss×S925 5mm 20inch',
+  '[NECKLACE PREMIUM] Moiss×S925 5mm 22inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 6inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 6.5inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 7inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 7.5inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 8inch',
+  '[BRACELET PREMIUM] Moiss×S925 3mm 8.5inch',
+  '[BRACELET PREMIUM] Moiss×S925 4mm 6〜8.5inch',
+  '[BRACELET PREMIUM] Moiss×S925 5mm 6〜8.5inch',
+];
+
+let productCount = 0;
+
+function addProduct() {
+  productCount++;
+  const container = document.getElementById('products-container');
+  const div = document.createElement('div');
+  div.className = 'product-block';
+  div.id = `prod-${productCount}`;
+  div.innerHTML = `
+    <div class="product-num">ITEM ${String(productCount).padStart(2,'0')}</div>
+    ${productCount > 1 ? `<button type="button" class="remove-btn" onclick="removeProduct(${productCount})">×</button>` : ''}
+    <div class="field">
+      <label>商品名<span class="req">*</span></label>
+      <div class="select-wrap">
+        <select name="product_${productCount}" required>
+          ${PRODUCTS.map(p => `<option value="${p === PRODUCTS[0] ? '' : p}">${p}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>カラー</label>
+        <div class="select-wrap">
+          <select name="color_${productCount}">
+            <option value="Gold">Gold</option>
+            <option value="Silver">Silver</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>数量</label>
+        <div class="select-wrap">
+          <select name="qty_${productCount}">
+            ${[1,2,3,4,5].map(n=>`<option value="${n}">${n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>ブレスレットのサイズ（インチ）</label>
+      <div class="select-wrap">
+        <select name="brace_size_${productCount}">
+          <option value="-">不要 / ネックレス・ピアス</option>
+          <option value="6inch">6inch（約15.2cm）</option>
+          <option value="6.5inch">6.5inch（約16.5cm）</option>
+          <option value="7inch">7inch（約17.8cm）</option>
+          <option value="7.5inch">7.5inch（約19.1cm）</option>
+          <option value="8inch">8inch（約20.3cm）</option>
+          <option value="8.5inch">8.5inch（約21.6cm）</option>
+        </select>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+}
+
+function removeProduct(n) {
+  document.getElementById(`prod-${n}`).remove();
+}
+
+function selectPay(el) {
+  document.querySelectorAll('.pay-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+
+// 郵便番号→住所自動入力
+async function fetchAddress(zip) {
+  const clean = zip.replace(/\D/g,'');
+  if (clean.length !== 7) return;
+  try {
+    const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${clean}`);
+    const data = await res.json();
+    if (data.results) {
+      const r = data.results[0];
+      document.getElementById('addr1').value = r.address1 + r.address2 + r.address3;
+    }
+  } catch(e) {}
+}
+
+// フォーム送信
+document.getElementById('order-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+
+  // 商品情報を収集
+  const items = [];
+  for (let i = 1; i <= productCount; i++) {
+    const block = document.getElementById(`prod-${i}`);
+    if (!block) continue;
+    const product = block.querySelector(`[name="product_${i}"]`)?.value;
+    const color   = block.querySelector(`[name="color_${i}"]`)?.value;
+    const qty     = block.querySelector(`[name="qty_${i}"]`)?.value;
+    const size    = block.querySelector(`[name="brace_size_${i}"]`)?.value;
+    if (product) items.push(`${product} / ${color} / ${size} / ${qty}個`);
+  }
+
+  const fd = new FormData(this);
+  const payload = {
+    timestamp:   new Date().toLocaleString('ja-JP', {timeZone:'Asia/Tokyo'}),
+    name:        fd.get('name'),
+    tel:         fd.get('tel'),
+    email:       fd.get('email') || '-',
+    zip:         fd.get('zip'),
+    addr1:       fd.get('addr1'),
+    addr2:       fd.get('addr2'),
+    items:       items.join('\n'),
+    payment:     fd.get('payment'),
+    memo:        fd.get('memo') || '-',
+    event:       'ポップアップ 2025.07.25',
+  };
+
+  // 送信
+  document.getElementById('order-form').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+  } catch(err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('order-form').style.display = 'block';
+    alert('送信に失敗しました。Wi-Fiをご確認の上、再度お試しください。');
+    btn.disabled = false;
+  }
+});
+
+// 初期商品ブロック追加
+addProduct();
+</script>
+</body>
+</html>
