@@ -241,6 +241,10 @@
     <div class="check">✅</div>
     <h2>ご注文ありがとうございます</h2>
     <p>ご注文内容を受け付けました。<br>商品が入荷次第、ご連絡の上発送いたします。<br><br>ご不明な点は会場スタッフまで<br>お気軽にお申し付けください。</p>
+    <button type="button" id="pdf-btn" onclick="downloadPDF()"
+      style="margin-top:24px; background:var(--gold); color:var(--navy); border:none; padding:14px 28px; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer; letter-spacing:1px;">
+      📄 受注票PDFをダウンロード
+    </button>
   </div>
 
   <!-- ローディング -->
@@ -308,9 +312,32 @@
           📱 PayPay<br><small style="color:var(--lgray)">当日QR決済</small>
         </label>
         <label class="pay-opt" onclick="selectPay(this)">
-          <input type="radio" name="payment" value="クレジットカード（後日請求）">
-          💳 カード<br><small style="color:var(--lgray)">後日請求</small>
+          <input type="radio" name="payment" value="クレジットカード">
+          💳 カード<br><small style="color:var(--lgray)">BASEショップ</small>
         </label>
+      </div>
+
+      <!-- 銀行振込 口座情報 -->
+      <div id="bank-info" style="display:none; margin-top:14px; background:#EEF4FF; border:1px solid #99B8E8; border-radius:10px; padding:16px;">
+        <div style="font-weight:bold; color:#1A3A6A; margin-bottom:8px;">🏦 お振込先口座</div>
+        <table style="font-size:14px; line-height:2; color:#333; border-collapse:collapse;">
+          <tr><td style="color:#666; padding-right:16px;">金融機関</td><td><b>北海道信用金庫</b></td></tr>
+          <tr><td style="color:#666;">支店名</td><td>元町支店（店番 025）</td></tr>
+          <tr><td style="color:#666;">口座番号</td><td><b>普通 4361856</b></td></tr>
+          <tr><td style="color:#666;">税区分</td><td>総合</td></tr>
+        </table>
+        <div style="margin-top:10px; font-size:12px; color:#666;">※ご入金確認後に商品を発送いたします。</div>
+      </div>
+
+      <!-- カード選択時はBAS誘導 -->
+      <div id="card-info" style="display:none; margin-top:14px; background:#FFF8EE; border:1px solid #E8C87A; border-radius:10px; padding:16px; text-align:center;">
+        <div style="font-weight:bold; color:#7A5200; margin-bottom:8px;">💳 カードでのお支払いはBASEショップへ</div>
+        <div style="font-size:13px; color:#555; margin-bottom:14px;">当イベント会場ではカードリーダーをご用意しておりません。<br>オンラインショップよりご注文ください。</div>
+        <a href="https://shop.soleance.jp" target="_blank"
+           style="display:inline-block; background:#C8A96E; color:white; padding:12px 28px; border-radius:8px; font-weight:bold; text-decoration:none; font-size:15px; letter-spacing:1px;">
+          🛒 shop.soleance.jp を開く
+        </a>
+        <div style="font-size:11px; color:#999; margin-top:10px;">カードを選択した場合、このフォームからの注文送信はできません。</div>
       </div>
     </div>
 
@@ -324,7 +351,7 @@
 
     <div class="note-box">
       📦 商品は仕入れ確定後（通常1〜3週間）にご連絡の上、順次発送いたします。<br>
-      🔒 ご入力いただいた個人情報は発送・ご連絡のみに使用します。
+      🔒 ご入力いたむいた個人情報は発送・ご連絡のみに使用します。
     </div>
 
     <button type="submit" class="submit-btn" id="submit-btn">注文を送信する</button>
@@ -333,8 +360,70 @@
 </div><!-- /container -->
 
 <script>
-// ===== GAS WebアプリのURL（デプロイ後に差し替え） =====
+// ===== GAS WebアプリのURL =====
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoiod6U0OhjDr6FJMqRJn4aZv6exibZmf53Qkt7bIA5mpQ34D-Qt6-b3jwJhwkd2THtw/exec';
+
+// 最後の注文データ（PDF用）
+let lastOrderPayload = null;
+
+// PDF生成・ダウンロード
+function downloadPDF() {
+  const p = lastOrderPayload;
+  if (!p) return;
+  const lines = p.items.split('\n').map((item, i) =>
+    `<tr><td style="padding:6px 8px;border-bottom:1px solid #EEE;">${i+1}</td><td style="padding:6px 8px;border-bottom:1px solid #EEE;">${item}</td></tr>`
+  ).join('');
+  const bankNote = p.payment === '銀行振込（後払い）' ? `
+    <div style="margin-top:16px;padding:12px;background:#EEF4FF;border:1px solid #99B8E8;border-radius:6px;font-size:13px;">
+      <b>🏦 お振込先</b><br>
+      北海道信用金庫 元町支店（店番 025）<br>
+      普通 4361856　税区分：総合
+    </div>` : '';
+  const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+  <title>受注票 — ${p.name} 様</title>
+  <style>
+    body{font-family:'Hiragino Kaku Gothic ProN',Arial,sans-serif;margin:0;padding:32px;color:#222;font-size:14px;}
+    .header{text-align:center;border-bottom:2px solid #C8A96E;padding-bottom:16px;margin-bottom:24px;}
+    .header h1{color:#0D2137;font-size:22px;letter-spacing:6px;font-weight:300;}
+    .header .sub{color:#999;font-size:11px;letter-spacing:3px;margin-top:4px;}
+    .title{font-size:16px;font-weight:bold;text-align:center;margin-bottom:20px;color:#0D2137;}
+    table.info{width:100%;border-collapse:collapse;margin-bottom:20px;}
+    table.info td{padding:7px 10px;border-bottom:1px solid #EEE;vertical-align:top;}
+    table.info td:first-child{color:#888;width:110px;}
+    table.items{width:100%;border-collapse:collapse;margin-bottom:20px;}
+    table.items th{background:#0D2137;color:#C8A96E;padding:7px 8px;font-size:12px;text-align:left;}
+    .footer{margin-top:32px;font-size:11px;color:#AAA;text-align:center;border-top:1px solid #EEE;padding-top:12px;}
+    @media print{body{padding:16px;}}
+  </style></head><body>
+  <div class="header"><h1>SOLÉANCE</h1><div class="sub">ORDER FORM</div></div>
+  <div class="title">受　注　票</div>
+  <table class="info">
+    <tr><td>受付日時</td><td>${p.timestamp}</td></tr>
+    <tr><td>お名前</td><td><b>${p.name}</b> 様</td></tr>
+    <tr><td>電話番号</td><td>${p.tel}</td></tr>
+    <tr><td>メール</td><td>${p.email}</td></tr>
+    <tr><td>郵便番号</td><td>〒${p.zip}</td></tr>
+    <tr><td>住所</td><td>${p.addr1} ${p.addr2}</td></tr>
+    <tr><td>お支払い</td><td>${p.payment}</td></tr>
+    <tr><td>備考</td><td>${p.memo}</td></tr>
+    <tr><td>イベント</td><td>${p.event}</td></tr>
+  </table>
+  <table class="items">
+    <thead><tr><th>#</th><th>ご注文商品</th></tr></thead>
+    <tbody>${lines}</tbody>
+  </table>
+  ${bankNote}
+  <div class="footer">SOLÉANCE — shop.soleance.jp　|　本票は自動発行された受注控えです。</div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SOLEANCE_受注票_${p.name}_${p.timestamp.replace(/[/: ]/g,'').slice(0,12)}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // 商品選択肢
 const PRODUCTS = [
@@ -442,6 +531,20 @@ function selectPay(el) {
   document.querySelectorAll('.pay-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
   el.querySelector('input').checked = true;
+  const val = el.querySelector('input').value;
+  document.getElementById('bank-info').style.display = val === '銀行振込（後払い）' ? 'block' : 'none';
+  document.getElementById('card-info').style.display = val === 'クレジットカード' ? 'block' : 'none';
+  // カード選択時は送信ボタンを無効化
+  const btn = document.getElementById('submit-btn');
+  if (val === 'クレジットカード') {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.textContent = 'カードはBASEショップでご注文ください';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = '注文を送信する';
+  }
 }
 
 // 郵便番号→住所自動入力
@@ -463,8 +566,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-
-  // 商品情報を収集
+  // 商品����報を収集
   const items = [];
   for (let i = 1; i <= productCount; i++) {
     const block = document.getElementById(`prod-${i}`);
@@ -496,12 +598,15 @@ document.getElementById('order-form').addEventListener('submit', async function(
   document.getElementById('loading').style.display = 'block';
 
   try {
+    // URLエンコードで送信（no-corsモードで確実に届く形式）
+    const params = new URLSearchParams();
+    Object.entries(payload).forEach(([k, v]) => params.append(k, v));
     await fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors',
-      body: new URLSearchParams(Object.entries(payload)),
- 
+      body: params,
     });
+    lastOrderPayload = payload; // PDF用に保存
     document.getElementById('loading').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
   } catch(err) {
