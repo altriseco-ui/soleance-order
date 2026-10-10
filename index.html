@@ -282,7 +282,7 @@
       </div>
       <div class="field">
         <label>番地・建物名<span class="req">*</span></label>
-        <input type="text" name="addr2" placeholder="大通西1丁目1-1　SOLEANCEビル101" required autocomplete="street-address">
+        <input type="text" name="addr2" placeholder="大通西1丁目1-1　SOLEANCEビル101（任意）" autocomplete="street-address">
       </div>
     </div>
 
@@ -329,7 +329,7 @@
         <div style="margin-top:10px; font-size:12px; color:#666;">※ご入金確認後に商品を発送いたします。</div>
       </div>
 
-      <!-- カード選択時はBAS誘導 -->
+      <!-- カード選択時のBAS誘導 -->
       <div id="card-info" style="display:none; margin-top:14px; background:#FFF8EE; border:1px solid #E8C87A; border-radius:10px; padding:16px; text-align:center;">
         <div style="font-weight:bold; color:#7A5200; margin-bottom:8px;">💳 カードでのお支払いはBASEショップへ</div>
         <div style="font-size:13px; color:#555; margin-bottom:14px;">当イベント会場ではカードリーダーをご用意しておりません。<br>オンラインショップよりご注文ください。</div>
@@ -351,7 +351,7 @@
 
     <div class="note-box">
       📦 商品は仕入れ確定後（通常1〜3週間）にご連絡の上、順次発送いたします。<br>
-      🔒 ご入力いたむいた個人情報は発送・ご連絡のみに使用します。
+      🔒 ご入力いただいた個人情報は発送・ご連絡のみに使用します。
     </div>
 
     <button type="submit" class="submit-btn" id="submit-btn">注文を送信する</button>
@@ -413,7 +413,7 @@ function downloadPDF() {
     <tbody>${lines}</tbody>
   </table>
   ${bankNote}
-  <div class="footer">SOLÉANCE — shop.soleance.jp　|　本票は自動発行された受注控えです。</div>
+  <div class="footer">SOLÉANCE — shop.soleance.jp　|　本票は自動発行されです。</div>
   <script>window.onload=()=>window.print();<\/script>
   </body></html>`;
   const blob = new Blob([html], {type:'text/html'});
@@ -566,7 +566,8 @@ document.getElementById('order-form').addEventListener('submit', async function(
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  // 商品����報を収集
+
+  // 商品情報を収集
   const items = [];
   for (let i = 1; i <= productCount; i++) {
     const block = document.getElementById(`prod-${i}`);
